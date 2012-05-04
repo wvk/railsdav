@@ -3,6 +3,8 @@ module Railsdav
   autoload :RoutingExtensions, 'routing_extensions'
   autoload :Renderer, 'renderer'
 
+  WEBDAV_HTTP_VERBS = %w(PROPFIND PROPPATCH MKCOL COPY MOVE LOCK UNLOCK).freeze
+
   def self.initialize!
     Mime::Type.register_alias 'application/xml', :webdav
 
@@ -25,4 +27,3 @@ module Railsdav
     end
   end
 end # module Railsdav
-

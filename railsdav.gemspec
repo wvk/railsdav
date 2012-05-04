@@ -7,5 +7,5 @@ Gem::Specification.new do |s|
   s.summary = %q{Make your Rails 3 resources accessible via WebDAV}
   s.homepage = %q{http://github.com/wvk/railsdav}
   s.description = %q{Provides basic Rails 3 extensions for making your business resources accessible via WebDAV. This gem does by no means by no means implement the full WebDAV semantics, but it suffices to access your app with client(-libs) such as Konqueror, cadaver, davfs2 or NetDrive}
-  s.files = %w(README init.rb lib/railsdav.rb lib/railsdav/routing_extensions.rb lib/railsdav/controller_extensions.rb lib/railsdav/renderer.rb)
+  s.files = %w(README.md init.rb lib/railsdav.rb lib/railsdav/routing_extensions.rb lib/railsdav/controller_extensions.rb lib/railsdav/renderer.rb)
 end
