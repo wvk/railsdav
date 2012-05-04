@@ -1,6 +1,10 @@
 
 # Allow usage of WebDAV specific HTTP verbs
-%w(propfind proppatch mkcol copy move lock unlock userinfo).each do |method|
+# userinfo is not a standard webdav verb, bur davfs2 uses it
+# and we want to be prepared to ignore it gracefully (e.g.
+# by sending a :not_implemented response)
+verbs = %w(propfind proppatch mkcol copy move lock unlock userinfo)
+verbs.each do |method|
   ActionDispatch::Request::HTTP_METHODS << method.upcase
   ActionDispatch::Request::HTTP_METHOD_LOOKUP[method.upcase] = method.to_sym
 end
@@ -25,6 +29,22 @@ class ActionDispatch::Routing::Mapper
 
     def dav_move(*args, &block)
       map_method(:move, *args, &block)
+    end
+
+    def dav_mkcol(*args, &block)
+      map_method(:mkcol, *args, &block)
+    end
+
+    def dav_lock(*args, &block)
+      map_method(:lock, *args, &block)
+    end
+
+    def dav_unlock(*args, &block)
+      map_method(:unlock, *args, &block)
+    end
+
+    def dav_proppatch(*args, &block)
+      map_method(:proppatch, *args, &block)
     end
   end
 

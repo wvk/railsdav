@@ -19,6 +19,11 @@ module Railsdav
 
     module InstanceMethods
       protected
+
+      def is_webdav_request?
+        Railsdav::WEBDAV_HTTP_VERBS.include? request.method
+      end
+
       def respond_to(options = {}, &block)
         if 'PROPFIND' == request.method
           response.headers['DAV'] = '1'
