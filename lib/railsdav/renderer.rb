@@ -2,7 +2,8 @@ require 'builder'
 
 module Railsdav
   class Renderer
-    autoload :ResponseCollector, 'railsdav/renderer/response_collector'
+    autoload :ResponseCollector,    'railsdav/renderer/response_collector'
+    autoload :ResponseTypeSelector, 'railsdav/renderer/response_type_selector'
 
     ResourceDescriptor = Struct.new(:url, :props)
 

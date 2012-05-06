@@ -28,7 +28,9 @@ TODO: Context
 
 ### Controller
 
-Tell your controller which actions should be abailable as WebDAV resources, what media types should be advertised and whether or not they should be also available as collection resources (i.e. "folders"):
+#### Doing the Set-Up
+
+Tell your controller which actions should be available as WebDAV resources, what media types should be advertised and whether or not they should be also available as collection resources (i.e. "folders"):
 
     class FoosController < ApplicationController
       enable_webdav_for :index,
@@ -40,8 +42,10 @@ Tell your controller which actions should be abailable as WebDAV resources, what
 
       # ...
 
-This stores some metadata about your actions that can be accessed from another controller, in case this one acts as a subresource of another resource. You may provide an arpitrary list of media types ("formats") with the :accept options. This causes RailsDAV to advertise that resource as separate files, one for each provided media type.
+This stores some metadata about your actions that can be accessed from another controller, in case this one acts as a subresource of another resource. You may provide an arbitrary list of media types ("formats") with the :accept options. This causes RailsDAV to advertise that resource as separate files, one for each provided media type.
 By default, RailsDAV also advertises each resource as a collection ("folder"), containing a resource's subresources. You may choose not to let it do so by setting the :collection option to false (nil won't do, it really must be /false/).
+
+# Handling PROPFIND Requests
 
 As for the actions themselves they, too, need some attention. Collection resources usually contain subresources (otherwise, why bother?) that are specified in the format.webdav responder block:
 
@@ -56,17 +60,19 @@ As for the actions themselves they, too, need some attention. Collection resourc
           format.json { render :xml  => @foos }
 
           # and this one is new...
-          format.webdav do |dav_format|
-            dav_format.collection @foos.map{|foo| foo_path(@foo) }
-            dav_format.xml  :size => @foos.to_json.size, :updated_at => @foos.maximum(:updated_at)
-            dav_format.json :size => @foos.to_xml.size, :updated_at => @foos.maximum(:updated_at)
+          format.webdav do |dav|
+            @foos.each |foo|
+              dav.subresource foo_path(foo)
+            end
+            dav.format :xml,  :size => @foos.to_json.size, :updated_at => @foos.maximum(:updated_at)
+            dav.format :json, :size => @foos.to_xml.size, :updated_at => @foos.maximum(:updated_at)
           end
         end
       end
 
       # ...
 
-The webdav responder block is called if a PROPFIND request comes in. Within the block, we define a metadata set for each possible mime type that will be served via WebDAV. If the index resource is accessed as a collection (PROPFIND /foos), a multi-status response is rendered with the foos collection containting up to 100 foo entries as separate XML and JSON files:
+The webdav responder block is called when a PROPFIND request comes in. Within the block, we define a metadata set for each possible mime type that will be served via WebDAV. If the index resource is accessed as a collection (PROPFIND /foos), a multi-status response is rendered with the foos collection containting up to 100 foo entries as separate XML and JSON files:
 
     PROPFIND /foos
 
@@ -79,23 +85,17 @@ will return a directory layout similar to:
       -> /foos/2.json
       ...
 
-If the index resource is accessed as XML (PROPFIND /foos.xml) or JSON (PROPFIND /foos.json), size and last-update of the XML/JSON "file" are included in the response. If you want to include that information in the collection response, you can pass the "dav_format.collection" call a Hash instead of an Array of paths:
+If the index resource is accessed as XML (PROPFIND /foos.xml) or JSON (PROPFIND /foos.json), size and last-update of the XML/JSON "file" are included in the response. You can include that metatdata for each subresource, too:
 
-      def index
-        @foos = Foo.limit(100)
-        respond_to do |format|
-          # and this one is new...
-          format.webdav do |dav_format|
-            dav_format.collection @foos.inject({}) {|memo, foo| memo[foo_path(@foo)] = {:updated_at => @foo.updated_at} }
+          format.webdav do |dav|
+            @foos.each do |foo|
+              dav.subresource foo_path(foo), :updated_at => foo.updated_at
+            end
           end
-        end
-      end
+
+the "dav.format" statements are entirely optional if you do not wish to include any metadata such as updated-at, created-at, or size. There's no need to be redundant here, since you already specified the most important metadata with "enable_webdav_for".
 
 The show action looks similar.
-
-TODO: explain why respond_to is always needed
-
-TODO: explain difference between PROPFIND /foos/1 and PROPFIND /foos/1.:format
 
       def show
         @foo = Foo.find(params[:id])
@@ -104,12 +104,16 @@ TODO: explain difference between PROPFIND /foos/1 and PROPFIND /foos/1.:format
           format.json { render :json => @foo }
           format.xml  { render :xml  => @foo }
 
-          format.webdav do |dav_format|
-            dav_format.xml  :size => @foo.to_xml.size,  :updated_at => @foo.updated_at
-            dav_format.json :size => @foo.to_json.size, :updated_at => @foo.updated_at
+          format.webdav do |dav|
+            dav.format :xml,  :size => @foo.to_xml.size,  :updated_at => @foo.updated_at
+            dav.format :json, :size => @foo.to_json.size, :updated_at => @foo.updated_at
           end
         end
       end
+
+TODO: explain why respond_to is always needed
+
+TODO: explain difference between PROPFIND /foos/1 and PROPFIND /foos/1.:format and medadata defined on class level and in responder block
 
 ### Routing
 
