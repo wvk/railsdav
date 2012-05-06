@@ -1,20 +1,17 @@
-RailsDAV
-========
+# RailsDAV
 
 Make your Rails 3 resources accessible via WebDAV
 
 ProvidesThis gem provides basic Rails 3 extensions for making your business resources accessible via WebDAV. This gem does by no means by no means implement the full WebDAV semantics, but it suffices to access your app with client(-libs) such as Konqueror, cadaver, davfs2 or NetDrive.
 
-Compatibility
-=============
+## Compatibility
 
 Currently only works with Rails 3.0.9!
 This is due to some hacking done "under the hood" in the Rails routing implementation as well as a simple method override in ActionController.
 
 Support for newer Rails versions is planned, so stay tuned!
 
-Installation
-============
+## Installation
 
 With Rails 3.0.9, just at the following to your Gemfile
 
@@ -24,16 +21,12 @@ and then run
 
     bundle install
 
-put the following into an initializer (e.g. config/initializers/webdav.rb)
 
-    Railsdav.initialize!
-
-This will, among other setup wirings, register a 'webdav' Mime Type named as an alias for 'application/xml', which will be discussed later.
-
-Usage
-=====
+## Usage
 
 TODO: Context
+
+### Controller
 
 Tell your controller which actions should be abailable as WebDAV resources, what media types should be advertised and whether or not they should be also available as collection resources (i.e. "folders"):
 
@@ -57,17 +50,23 @@ As for the actions themselves they, too, need some attention. Collection resourc
       def index
         @foos = Foo.limit(100)
         respond_to do |format|
+          # you already know this...
           format.html
-          format.json   { render :json => @foos }
-          format.webdav { @foos.map{|foo| foo_path(@foo) } }
+          format.xml  { render :json => @foos }
+          format.json { render :xml  => @foos }
+
+          # and this one is new...
+          format.webdav do |dav_format|
+            dav_format.collection @foos.map{|foo| foo_path(@foo) }
+            dav_format.xml  :size => @foos.to_json.size, :updated_at => @foos.maximum(:updated_at)
+            dav_format.json :size => @foos.to_xml.size, :updated_at => @foos.maximum(:updated_at)
+          end
         end
       end
 
       # ...
 
-This may seem a little awkward and hacky, but it is really the most shorthand thing to do: What really happens inside that responder block when a PROPFIND request hits the resource is an XML builder template being rendered with all the needed information taken from the paths you specify within the block and the metada stored in the target controllers (see above: enable_webdav_for).
-
-If you define a webdav responder block, the minimum it should contain is an Array with path names of subresources. So in the above example, when a PROPFIND request hits the index action, a multi-status response is rendered with the foos collection containting up to 100 foo entries as separate XML and JSON files:
+The webdav responder block is called if a PROPFIND request comes in. Within the block, we define a metadata set for each possible mime type that will be served via WebDAV. If the index resource is accessed as a collection (PROPFIND /foos), a multi-status response is rendered with the foos collection containting up to 100 foo entries as separate XML and JSON files:
 
     PROPFIND /foos
 
@@ -80,24 +79,39 @@ will return a directory layout similar to:
       -> /foos/2.json
       ...
 
-The show action looks similar, but here things get a little more brain twisty.
+If the index resource is accessed as XML (PROPFIND /foos.xml) or JSON (PROPFIND /foos.json), size and last-update of the XML/JSON "file" are included in the response. If you want to include that information in the collection response, you can pass the "dav_format.collection" call a Hash instead of an Array of paths:
 
-TODO: explain options to respond_to
+      def index
+        @foos = Foo.limit(100)
+        respond_to do |format|
+          # and this one is new...
+          format.webdav do |dav_format|
+            dav_format.collection @foos.inject({}) {|memo, foo| memo[foo_path(@foo)] = {:updated_at => @foo.updated_at} }
+          end
+        end
+      end
+
+The show action looks similar.
+
 TODO: explain why respond_to is always needed
+
 TODO: explain difference between PROPFIND /foos/1 and PROPFIND /foos/1.:format
 
       def show
         @foo = Foo.find(params[:id])
-        respond_to(:updated_at => @foo.updated_at) do |format|
+        respond_to do |format|
           format.html
           format.json { render :json => @foo }
           format.xml  { render :xml  => @foo }
-          # no webdav responder needed, since no subresources are present
+
+          format.webdav do |dav_format|
+            dav_format.xml  :size => @foo.to_xml.size,  :updated_at => @foo.updated_at
+            dav_format.json :size => @foo.to_json.size, :updated_at => @foo.updated_at
+          end
         end
       end
-    end
 
-Routing:
+### Routing
 
 To make the rails routing mechanism webdav aware, RailsDAV extends it by means of some new DSL methods. Let's take the above example again and what the default routing would look like:
 
@@ -121,10 +135,7 @@ To enable propfind for a single action somewhere, use:
 
 the other available helpers are: dav_copy, dav_move, dav_mkcol, dav_lock, dav_unlock, dav_proppatch.
 
-
-
-Authentication
-==============
+### Authentication
 
 RailsDAV does not do any authentication whatsoever, nor is there any sugar to go nicely with $your_favourite_authentication_gem. However, since cookie/session based authentication does not like to be friends with WebDAV, it's up to you to ensure Basic or Digest Authentication is used when a Request from a WebDAV client comes in.
 
@@ -158,9 +169,9 @@ Assuming you have an Application where resources are normally accessed as text/h
 
 is_webdav_request? checks whether an Incoming request is issued by a WebDAV client using any specific HTTP verbs (such as PROPFIND, MKCOL, COPY, MOVE, etc.) or a media type other than text/html is requested.
 
-Changelog
-=========
+## Changelog
 
+0.0.2: More or less a complete rewrite: Use more sensible API, modularize the renderer code, get rid of controller monkey patching
 0.0.1: Initial Release: Basic support for PROPFIND and webdav_resource(s) based routing
 
 Copyright (c) 2012 Willem van Kerkhof <wvk@consolving.de>, released under the MIT license
