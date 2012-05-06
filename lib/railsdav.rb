@@ -8,25 +8,23 @@ module Railsdav
 
   WEBDAV_HTTP_VERBS = ActionDispatch::Request::RFC2518
 
-  def self.initialize!
-    Mime::Type.register_alias 'application/xml', :webdav
+  Mime::Type.register_alias 'application/xml', :webdav
 
-    ActionController::Renderers.add :webdav do |response_type, options|
-      renderer = Railsdav::Renderer.new(self)
-      xml_str  = renderer.respond_with response_type, options
+  ActionController::Renderers.add :webdav do |response_type, options|
+    renderer = Railsdav::Renderer.new(self)
+    xml_str  = renderer.respond_with response_type, options
 
-      Rails.logger.debug "WebDAV response:\n#{xml_str}"
+    Rails.logger.debug "WebDAV response:\n#{xml_str}"
 
-      response.headers['Depth'] = renderer.depth.to_s
-      response.headers['DAV']   = '1'
+    response.headers['Depth'] = renderer.depth.to_s
+    response.headers['DAV']   = '1'
 
-      send_data xml_str,
-          :format => Mime::XML,
-          :status => :multi_status
-    end
+    send_data xml_str,
+        :content_type => Mime::XML,
+        :status => :multi_status
+  end
 
-    ActionController::Base.send :include, Railsdav::ControllerExtensions
-    ActionDispatch::Request.send :include, Railsdav::RequestExtensions
-  end # self.initialize!
+  ActionController::Base.send :include, Railsdav::ControllerExtensions
+  ActionDispatch::Request.send :include, Railsdav::RequestExtensions
 
 end # module Railsdav
