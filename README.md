@@ -84,7 +84,7 @@ The show action looks similar, but here things get a little more brain twisty.
 
 TODO: explain options to respond_to
 TODO: explain why respond_to is always needed
-TODO: explain difference bettween PROPFIND /foos/1 and PROPFIND /foos/1.:format
+TODO: explain difference between PROPFIND /foos/1 and PROPFIND /foos/1.:format
 
       def show
         @foo = Foo.find(params[:id])

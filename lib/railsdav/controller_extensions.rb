@@ -3,39 +3,51 @@ module Railsdav
     extend ActiveSupport::Concern
   
     included do
-      class_attribute :webdav_layout
+      class_attribute :webdav_metadata
+
+      alias_method_chain :respond_to, :webdav
+      alias_method_chain :respond_with, :webdav
     end
 
     module ClassMethods
       def enable_webdav_for(*names_and_options, &block)
         options = names_and_options.extract_options!
+        names   = names_and_options
+        self.webdav_metadata ||= {}
 
-        self.webdav_layout ||= {}
-        names_and_options.each do |name|
-          self.webdav_layout[name] = options
+        options[:collection] = true unless options.has_key?(:collection)
+
+        names.each do |name|
+          self.webdav_metadata[name] = options
         end
+      end
+
+      def webdav_metadata_for_action(action)
+        webdav_metadata[action.to_sym]
       end
     end
 
     module InstanceMethods
-      protected
-
-      def is_webdav_request?
-        Railsdav::WEBDAV_HTTP_VERBS.include? request.method
+      # decorate behaviour defined in ActionController::MimeResponds
+      def respond_to_with_webdav(&block)
+        if request.propfind?
+          render :webdav => :propstat, :respond_to_block => block
+        else
+          respond_to_without_webdav &block
+        end
       end
 
-      def respond_to(options = {}, &block)
-        if 'PROPFIND' == request.method
-          response.headers['DAV'] = '1'
-          if options[:collection] == false and params[:format].blank?
-            this_action = {}
-          else
-            this_action = {request.env['REQUEST_URI'] => options.merge(:format => params[:format] ? params[:format] : :collection)}
-          end
-          render :webdav => :propstat, :resource_layout => this_action, :responder => block
+      # decorate behaviour defined in ActionController::MimeResponds
+      def respond_with_with_webdav(*resources, &block)
+        if request.propfind?
+          render :webdav => :propstat, :respond_to_block => block
         else
-          super &block
+          respond_with_without_webdav &block
         end
+      end
+
+      def webdav_metadata_for_current_action
+        self.class.webdav_metadata_for_action params[:action]
       end
 
     end
