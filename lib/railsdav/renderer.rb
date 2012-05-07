@@ -132,7 +132,7 @@ module Railsdav
       params = @controller.params
       params[:propfind] ||= {:prop => []}
 
-      if params[:propfind][:prop][:allprop]
+      if params[:propfind][:allprop]
         requested_properties = nil # fill it later, see below.
       else
         requested_properties = params[:propfind][:prop]
