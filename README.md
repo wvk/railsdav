@@ -175,6 +175,7 @@ is_webdav_request? checks whether an Incoming request is issued by a WebDAV clie
 
 ## Changelog
 
+* 0.0.4: Basic support for allprop in PROPFIND
 * 0.0.3: Change the API within the responder block to a more concise one
 * 0.0.2: More or less a complete rewrite: Use more sensible API, modularize the renderer code, get rid of controller monkey patching
 * 0.0.1: Initial Release: Basic support for PROPFIND and webdav_resource(s) based routing
