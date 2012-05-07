@@ -14,7 +14,8 @@ module Railsdav
       def format(name, options)
         if Mime::EXTENSION_LOOKUP[name.to_s]
           if @request_format.to_sym == name
-            @resource_options = options
+            # TODO: somehow get the attributes (size, updated-at, ...) from the actual Mime responder block here
+            @resource_options.merge! options
           end
         else
           raise UnknownMimeTypeExtension, "#{name} is not a valid MIME type file extension."

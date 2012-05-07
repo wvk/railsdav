@@ -131,7 +131,12 @@ module Railsdav
     def propstat_for(*resources)
       params = @controller.params
       params[:propfind] ||= {:prop => []}
-      requested_properties = params[:propfind][:prop]
+
+      if params[:propfind][:prop][:allprop]
+        requested_properties = nil # fill it later, see below.
+      else
+        requested_properties = params[:propfind][:prop]
+      end
 
       resources.flatten.each do |resource|
         hash = resource.props
@@ -154,13 +159,12 @@ module Railsdav
           :getcontenttype        => hash[:format].to_s
         }
 
-        # TODO: implement 'allprop'
-        # TODO: implement 'allprop' with 'include'
-
         if resource.collection?
           response_hash[:resourcetype]   = lambda { @dav.tag! :collection }
           response_hash[:getcontenttype] = nil
         end
+
+        requested_properties ||= response_hash.keys
 
         response_for(resource.url) do |dav|
           dav.propstat do
