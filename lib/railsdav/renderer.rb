@@ -5,11 +5,20 @@ module Railsdav
     autoload :ResponseCollector,    'railsdav/renderer/response_collector'
     autoload :ResponseTypeSelector, 'railsdav/renderer/response_type_selector'
 
-    ResourceDescriptor = Struct.new(:url, :props)
-
     class ResourceDescriptor
+      attr_accessor :url, :props
+
+      def initialize(url, props)
+        @url, @props = url, props
+      end
+
       def collection?
         self.props[:format] == :collection
+      end
+
+      def url
+        @url += '/' if self.collection? and @url[-1] != '/'
+        @url
       end
     end
 
@@ -84,12 +93,19 @@ module Railsdav
       elements = options.slice(:error)
 
       render do
-        response_for options[:href], options[:status] do |dav|
+        response_for options[:href] do |dav|
           elements.each do |name, value|
+            status_for options[:status]
             dav.__send__ name, value
           end
         end
       end
+    end
+
+    def status_for(status)
+      code   = Rack::Utils.status_code(status || :ok)
+      status = "HTTP/1.1 #{code} #{Rack::Utils::HTTP_STATUS_CODES[code]}"
+      @dav.status status
     end
 
     # Render a WebDAV multistatus response with a "response" element per resource
@@ -135,8 +151,7 @@ module Railsdav
           :creationdate          => updated_at.rfc2822,
           :getlastmodified       => updated_at.rfc2822,
           :getcontentlength      => hash[:size],
-          :getcontenttype        => hash[:format].to_s,
-          :executable            => 0
+          :getcontenttype        => hash[:format].to_s
         }
 
         # TODO: implement 'allprop'
@@ -147,8 +162,9 @@ module Railsdav
           response_hash[:getcontenttype] = nil
         end
 
-        response_for(resource.url, hash[:status] || :ok) do |dav|
+        response_for(resource.url) do |dav|
           dav.propstat do
+            status_for hash[:status]
             dav.prop do
               requested_properties.each do |prop_name, opts|
                 if prop = response_hash[prop_name.to_sym]
@@ -173,14 +189,10 @@ module Railsdav
       end # resource_layout.keys.each
     end # def propstat_for
 
-    def response_for(href, status)
-      code   = Rack::Utils.status_code(status)
-      status = "HTTP/1.1 #{code} #{Rack::Utils::HTTP_STATUS_CODES[code]}"
-
+    def response_for(href)
       @dav.response do
         @dav.href href
         yield @dav
-        @dav.status status
       end
     end
 
