@@ -1,26 +1,12 @@
+# encoding: utf-8
+
 require 'builder'
 
 module Railsdav
   class Renderer
+    autoload :ResourceDescriptor,   'railsdav/renderer/resource_descriptor'
     autoload :ResponseCollector,    'railsdav/renderer/response_collector'
     autoload :ResponseTypeSelector, 'railsdav/renderer/response_type_selector'
-
-    class ResourceDescriptor
-      attr_accessor :url, :props
-
-      def initialize(url, props)
-        @url, @props = url, props
-      end
-
-      def collection?
-        self.props[:format] == :collection
-      end
-
-      def url
-        @url += '/' if self.collection? and @url[-1] != '/'
-        @url
-      end
-    end
 
     # Return the webdav metadata for a given URL/path
     #
@@ -160,7 +146,7 @@ module Railsdav
         }
 
         if resource.collection?
-          response_hash[:resourcetype]   = lambda { @dav.tag! :collection }
+          response_hash[:resourcetype]   = proc { @dav.tag! :collection } # must be block to render <collection></collection> instead of "collection"
           response_hash[:getcontenttype] = nil
         end
 
@@ -171,15 +157,15 @@ module Railsdav
             status_for hash[:status]
             dav.prop do
               requested_properties.each do |prop_name, opts|
-                if prop = response_hash[prop_name.to_sym]
-                  if prop.respond_to? :call
+                if prop_val = response_hash[prop_name.to_sym]
+                  if prop_val.respond_to? :call
                     if opts
-                      dav.tag! prop_name, opts, &prop
+                      dav.tag! prop_name, opts, &prop_val
                     else
-                      dav.tag! prop_name, &prop
+                      dav.tag! prop_name, &prop_val
                     end
                   else
-                    dav.tag! prop_name, prop, opts
+                    dav.tag! prop_name, prop_val, opts
                   end
                 elsif opts
                   dav.tag! prop_name, opts

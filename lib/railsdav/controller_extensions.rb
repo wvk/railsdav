@@ -1,7 +1,9 @@
+# encoding: utf-8
+
 module Railsdav
   module ControllerExtensions
     extend ActiveSupport::Concern
-  
+
     included do
       class_attribute :webdav_metadata
 
@@ -27,29 +29,27 @@ module Railsdav
       end
     end
 
-    module InstanceMethods
-      # decorate behaviour defined in ActionController::MimeResponds
-      def respond_to_with_webdav(&block)
-        if request.propfind?
-          render :webdav => :propstat, :respond_to_block => block
-        else
-          respond_to_without_webdav &block
-        end
+    # decorate behaviour defined in ActionController::MimeResponds
+    def respond_to_with_webdav(*mimes, &block)
+      if request.propfind?
+        render :webdav => :propstat, :respond_to_block => block
+      else
+        respond_to_without_webdav *mimes, &block
       end
-
-      # decorate behaviour defined in ActionController::MimeResponds
-      def respond_with_with_webdav(*resources, &block)
-        if request.propfind?
-          render :webdav => :propstat, :respond_to_block => block
-        else
-          respond_with_without_webdav &block
-        end
-      end
-
-      def webdav_metadata_for_current_action
-        self.class.webdav_metadata_for_action params[:action]
-      end
-
     end
+
+    # decorate behaviour defined in ActionController::MimeResponds
+    def respond_with_with_webdav(*resources, &block)
+      if request.propfind?
+        render :webdav => :propstat, :respond_to_block => block
+      else
+        respond_with_without_webdav *resources, &block
+      end
+    end
+
+    def webdav_metadata_for_current_action
+      self.class.webdav_metadata_for_action params[:action]
+    end
+
   end
 end

@@ -1,5 +1,7 @@
+# encoding: utf-8
+
 module Railsdav
-  class Renderer    
+  class Renderer
     class ResponseCollector
       attr_writer :controller
 

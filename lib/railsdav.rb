@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 module Railsdav
   autoload :ControllerExtensions, 'railsdav/controller_extensions'
   autoload :RoutingExtensions,    'railsdav/routing_extensions'

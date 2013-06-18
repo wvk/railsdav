@@ -6,14 +6,14 @@ ProvidesThis gem provides basic Rails 3 extensions for making your business reso
 
 ## Compatibility
 
-Currently only works with Rails 3.0.9!
+Definitely works with Rails 3.0.9 and 3.2.13, but should also work with versions in between.
 This is due to some hacking done "under the hood" in the Rails routing implementation as well as a simple method override in ActionController.
 
-Support for newer Rails versions is planned, so stay tuned!
+f you encounter any problems with other Rails versions, please feel free to report an issue or send me a pull request on github.
 
 ## Installation
 
-With Rails 3.0.9, just at the following to your Gemfile
+Just at the following to your Gemfile
 
     gem 'railsdav', :git => 'https://github.com/wvk/railsdav.git'
 
@@ -141,9 +141,9 @@ the other available helpers are: dav_copy, dav_move, dav_mkcol, dav_lock, dav_un
 
 ### Authentication
 
-RailsDAV does not do any authentication whatsoever, nor is there any sugar to go nicely with $your_favourite_authentication_gem. However, since cookie/session based authentication does not like to be friends with WebDAV, it's up to you to ensure Basic or Digest Authentication is used when a Request from a WebDAV client comes in.
+RailsDAV does not do any authentication whatsoever, nor is there any sugar to go nicely with $your_favourite_authentication_gem. However, since cookie/session based authentication does not like to be friends with WebDAV, it's up to you to ensure Basic or Digest Authentication is used when a request from a WebDAV client comes in.
 
-Assuming you have an Application where resources are normally accessed as text/html but never so for WebDAV, a simple means of providing access control using HTTP Basic might look as follows:
+Assuming you have an application where resources are normally accessed as text/html but never so for WebDAV, a simple means of providing access control using HTTP Basic might look like this:
 
     class ApplicationController < ActionController::Base
       before_filter :authenticate_unless_session
@@ -152,7 +152,7 @@ Assuming you have an Application where resources are normally accessed as text/h
 
       def authenticate_unless_session
         # Always use Basic Authentication if the request method is one of WebDAV's
-        if is_webdav_request
+        if is_webdav_request?
           basic_auth
         elsif request.format == Mime::HTML
           # skip Basic Authentication and use anoher way
@@ -175,6 +175,7 @@ is_webdav_request? checks whether an Incoming request is issued by a WebDAV clie
 
 ## Changelog
 
+* 0.0.5: Rails 3.1.x compatibility, add encoding hints, fix ResourceDescriptor load error
 * 0.0.4: Basic support for allprop in PROPFIND
 * 0.0.3: Change the API within the responder block to a more concise one
 * 0.0.2: More or less a complete rewrite: Use more sensible API, modularize the renderer code, get rid of controller monkey patching
