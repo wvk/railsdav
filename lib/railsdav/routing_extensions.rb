@@ -87,7 +87,7 @@ class ActionDispatch::Routing::Mapper
     end
 
     def dav_options_response(*allowed_http_verbs)
-      lambda { [200, {'Allow' => allowed_http_verbs.flatten.map{|s| s.to_s.upcase}.join(' '), 'DAV' => '1'}, ''] }
+      proc { [200, {'Allow' => allowed_http_verbs.flatten.map{|s| s.to_s.upcase}.join(' '), 'DAV' => '1'}, ['']] }
     end
 
     def dav_match(*args)
@@ -102,7 +102,7 @@ class ActionDispatch::Routing::Mapper
         return self
       end
 
-      sub_block = lambda do
+      sub_block = proc do
         yield if block_given?
 
         if parent_resource.actions.include?(:create)
@@ -143,7 +143,7 @@ class ActionDispatch::Routing::Mapper
         return self
       end
 
-      sub_block = lambda do
+      sub_block = proc do
         yield if block_given?
 
         opts = []
