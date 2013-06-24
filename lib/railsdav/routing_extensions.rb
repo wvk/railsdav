@@ -50,21 +50,29 @@ class ActionDispatch::Routing::Mapper
   end
 
   module Resources
-    CANONICAL_ACTIONS << :update_all
+    CANONICAL_ACTIONS << 'update_all'
 
     class WebDAVResource < Resource
       DEFAULT_ACTIONS = [:index, :create, :new, :show, :update, :destroy, :edit, :update_all]
+
+      def default_actions
+        DEFAULT_ACTIONS
+      end
     end
 
     class WebDAVSingletonResource < SingletonResource
       DEFAULT_ACTIONS = [:show, :create, :update, :destroy, :new, :edit]
+
+      def default_actions
+        DEFAULT_ACTIONS
+      end
     end
 
     def resource_scope?
       [:webdav_resource, :webdav_resources, :resource, :resources].include?(@scope[:scope_level])
     end
 
-    if Rails.version <= '3.1.0'
+    if Rails.version < '3.2'
       # Rails versions after 3.1 expect two arguments here, the first being :resource, :resources,
       # :webdav_resource etc.so we don't need the inferring logic anymore in newer versions.
       def resource_scope(resource)
@@ -96,7 +104,7 @@ class ActionDispatch::Routing::Mapper
     end
 
     def webdav_resource(*resources, &block)
-      options = resources.extract_options!
+      options = resources.extract_options!.dup
 
       if apply_common_behavior_for(:webdav_resource, resources, options, &block)
         return self
@@ -127,7 +135,7 @@ class ActionDispatch::Routing::Mapper
         end
       end
 
-      if Rails.version <= '3.1'
+      if Rails.version < '3.2'
         resource_scope(WebDAVSingletonResource.new(resources.pop, options), &sub_block)
       else
         resource_scope(:webdav_resource, WebDAVSingletonResource.new(resources.pop, options), &sub_block)
@@ -161,6 +169,8 @@ class ActionDispatch::Routing::Mapper
           if parent_resource.actions.include?(:update_all)
             put :index, :action => :update_all
             opts << :put
+          else
+            puts "parent_resource #{parent_resource.inspect} does not include update_all: #{parent_resource.actions}"
           end
           dav_options :index, :to => dav_options_response(opts)
         end
@@ -200,7 +210,7 @@ class ActionDispatch::Routing::Mapper
         end
       end
 
-      if Rails.version <= '3.1'
+      if Rails.version < '3.2'
         resource_scope(WebDAVResource.new(resources.pop, options), &sub_block)
       else
         resource_scope(:webdav_resources, WebDAVResource.new(resources.pop, options), &sub_block)
