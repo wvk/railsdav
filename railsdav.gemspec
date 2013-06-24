@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name    = %q{railsdav}
-  s.version = '0.0.5'
+  s.version = '0.0.6'
   s.date    = Time.now
   s.authors = ['Willem van Kerkhof']
   s.email   = %q{wvk@consolving.de}

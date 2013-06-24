@@ -175,7 +175,8 @@ is_webdav_request? checks whether an Incoming request is issued by a WebDAV clie
 
 ## Changelog
 
-* 0.0.5: Rails 3.1.x compatibility, add encoding hints, fix ResourceDescriptor load error
+* 0.0.6: Fix update_all for Rails 3.2
+* 0.0.5: Rails 3.2.x compatibility, add encoding hints, fix ResourceDescriptor load error
 * 0.0.4: Basic support for allprop in PROPFIND
 * 0.0.3: Change the API within the responder block to a more concise one
 * 0.0.2: More or less a complete rewrite: Use more sensible API, modularize the renderer code, get rid of controller monkey patching
