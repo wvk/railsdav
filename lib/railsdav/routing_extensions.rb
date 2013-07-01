@@ -169,8 +169,6 @@ class ActionDispatch::Routing::Mapper
           if parent_resource.actions.include?(:update_all)
             put :index, :action => :update_all
             opts << :put
-          else
-            puts "parent_resource #{parent_resource.inspect} does not include update_all: #{parent_resource.actions}"
           end
           dav_options :index, :to => dav_options_response(opts)
         end
