@@ -22,7 +22,7 @@ module Railsdav
     attr_accessor :depth
 
     # Create a new Renderer instance that will render an XML multistatus response.
-    # 
+    #
     # Arguments:
     #   controller: the current controller instance
     #

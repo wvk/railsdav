@@ -20,7 +20,7 @@ module Railsdav
         options[:collection] = true unless options.has_key?(:collection)
 
         names.each do |name|
-          self.webdav_metadata[name] = options
+          self.webdav_metadata = self.webdav_metadata.merge(name => options)
         end
       end
 

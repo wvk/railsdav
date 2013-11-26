@@ -175,6 +175,7 @@ is_webdav_request? checks whether an Incoming request is issued by a WebDAV clie
 
 ## Changelog
 
+* 0.0.7: Fix metadata class attribute inheritance problem
 * 0.0.6: Fix update_all for Rails 3.2
 * 0.0.5: Rails 3.2.x compatibility, add encoding hints, fix ResourceDescriptor load error
 * 0.0.4: Basic support for allprop in PROPFIND
