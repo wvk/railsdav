@@ -1,26 +1,33 @@
 # RailsDAV
 
-Make your Rails 3 resources accessible via WebDAV
+Make your Rails 4 resources accessible via WebDAV.
 
-ProvidesThis gem provides basic Rails 3 extensions for making your business resources accessible via WebDAV. This gem does by no means by no means implement the full WebDAV semantics, but it suffices to access your app with client(-libs) such as Konqueror, cadaver, davfs2 or NetDrive.
+This gem provides basic Rails 3 extensions for making your business
+resources accessible via WebDAV. This gem does by no means by no means
+implement the full WebDAV semantics, but it suffices to access your
+app with client(-libs) such as Konqueror, cadaver, davfs2 or NetDrive.
 
 ## Compatibility
 
-Definitely works with Rails 3.0.9 and 3.2.13, but should also work with versions in between.
-This is due to some hacking done "under the hood" in the Rails routing implementation as well as a simple method override in ActionController.
+Definitely works with Rails 3.0.9 and 3.2.13, but should also work
+with versions in between.  This is due to some hacking done "under the
+hood" in the Rails routing implementation as well as a simple method
+override in ActionController.
 
-f you encounter any problems with other Rails versions, please feel free to report an issue or send me a pull request on github.
+If you encounter any problems with other Rails versions, please feel
+free to report an issue or send me a pull request on github.
 
 ## Installation
 
-Just at the following to your Gemfile
+Ensure that your project has the
+[Rails ActionPack XML Params Parser gem](https://github.com/rails/actionpack-xml_parser)
+installed, and then ust add the following to your Gemfile:
 
     gem 'railsdav', :git => 'https://github.com/wvk/railsdav.git'
 
-and then run
+and then run:
 
     bundle install
-
 
 ## Usage
 
