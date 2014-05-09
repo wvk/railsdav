@@ -60,7 +60,7 @@ module Railsdav
     def render
       @dav = Builder::XmlMarkup.new :indent => 2
       @dav.instruct!
-      @dav.multistatus :xmlns => 'DAV:' do
+      @dav.multistatus "xmlns:D" => 'DAV:' do
         yield @dav
       end
       @dav.target!
