@@ -95,7 +95,7 @@ class ActionDispatch::Routing::Mapper
     end
 
     def dav_options_response(*allowed_http_verbs)
-      proc { [200, {'Allow' => allowed_http_verbs.flatten.map{|s| s.to_s.upcase}.join(' '), 'DAV' => '1'}, ['']] }
+      proc { [200, {'Allow' => allowed_http_verbs.flatten.map{|s| s.to_s.upcase}.join(' '), 'DAV' => '1'}, [' ']] }
     end
 
     def dav_match(*args)
