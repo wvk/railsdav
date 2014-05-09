@@ -139,7 +139,7 @@ module Railsdav
         response_hash = {
           :quota_used_bytes      => 0,
           :quota_available_bytes => 10.gigabytes,
-          :creationdate          => updated_at.rfc2822,
+          :creationdate          => updated_at.iso8601,
           :getlastmodified       => updated_at.rfc2822,
           :getcontentlength      => hash[:size],
           :getcontenttype        => hash[:format].to_s
