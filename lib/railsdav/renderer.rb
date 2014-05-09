@@ -60,7 +60,7 @@ module Railsdav
     def render
       @dav = Builder::XmlMarkup.new :indent => 2
       @dav.instruct!
-      @dav.multistatus "xmlns:D" => 'DAV:' do
+      @dav.tag!("D:multistatus", "xmlns:D" => 'DAV:') do
         yield @dav
       end
       @dav.target!
@@ -91,7 +91,7 @@ module Railsdav
     def status_for(status)
       code   = Rack::Utils.status_code(status || :ok)
       status = "HTTP/1.1 #{code} #{Rack::Utils::HTTP_STATUS_CODES[code]}"
-      @dav.status status
+      @dav.tag! "D:status", status
     end
 
     # Render a WebDAV multistatus response with a "response" element per resource
@@ -136,6 +136,8 @@ module Railsdav
           updated_at = Time.now
         end
 
+        # note: all of these are assumed to be from the DAV:
+        # namespace!
         response_hash = {
           :quota_used_bytes      => 0,
           :quota_available_bytes => 10.gigabytes,
@@ -146,16 +148,16 @@ module Railsdav
         }
 
         if resource.collection?
-          response_hash[:resourcetype]   = proc { @dav.tag! :collection } # must be block to render <collection></collection> instead of "collection"
+          response_hash[:resourcetype]   = proc { @dav.tag! "D:collection" } # must be block to render <collection></collection> instead of "collection"
           response_hash[:getcontenttype] = nil
         end
 
         requested_properties ||= response_hash.keys
 
         response_for(resource.url) do |dav|
-          dav.propstat do
+          dav.tag! "D:propstat" do
             status_for hash[:status]
-            dav.prop do
+            dav.tag! "D:prop" do
               requested_properties.each do |prop_name, opts|
                 if prop_val = response_hash[prop_name.to_sym]
                   if prop_val.respond_to? :call
@@ -180,8 +182,8 @@ module Railsdav
     end # def propstat_for
 
     def response_for(href)
-      @dav.response do
-        @dav.href href
+      @dav.tag! "D:response" do
+        @dav.tag! "D:href", href
         yield @dav
       end
     end
