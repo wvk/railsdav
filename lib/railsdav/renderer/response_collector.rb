@@ -1,5 +1,7 @@
 # encoding: utf-8
 
+require "uri"
+
 module Railsdav
   class Renderer
     class ResponseCollector
@@ -14,7 +16,9 @@ module Railsdav
       end
 
       def resource
-        @resource ||= Renderer::ResourceDescriptor.new(@controller.request.url, @selector.resource_options)
+
+        request_path = URI(@controller.request.url).path
+        @resource ||= Renderer::ResourceDescriptor.new(request_path, @selector.resource_options)
       end
 
       # responds to calls like html, xml, json by ignoring them
