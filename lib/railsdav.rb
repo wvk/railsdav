@@ -13,6 +13,8 @@ module Railsdav
   Mime::Type.register_alias 'application/xml', :webdav
 
   ActionController::Renderers.add :webdav do |response_type, options|
+    Rails.logger.debug "Headers:\n#{self.request.headers}"
+    
     renderer = Railsdav::Renderer.new(self)
     xml_str  = renderer.respond_with response_type, options
 
