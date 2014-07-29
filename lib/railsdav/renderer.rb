@@ -30,6 +30,7 @@ module Railsdav
       @controller = controller
       @request    = controller.request
       @depth      = (@request.headers['Depth'].to_i > 0) ? 1 : 0 # depth "infinite" is not yet supported
+      Rails.logger.debug "Depth:\n#{@request.headers['Depth']}"
     end
 
     # Render the requested response_type.
