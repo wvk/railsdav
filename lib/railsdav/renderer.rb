@@ -29,7 +29,8 @@ module Railsdav
     def initialize(controller)
       @controller = controller
       @request    = controller.request
-      @depth      = (@request.headers['Depth'].to_i > 0) ? 1 : 0 # depth "infinite" is not yet supported
+      # @depth      = (@request.headers['Depth'].to_i > 0) ? 1 : 0 # depth "infinite" is not yet supported
+      @depth      = (@request.headers['Depth'].to_i)
       Rails.logger.debug "Depth:\n#{@request.headers['Depth']}"
     end
 
