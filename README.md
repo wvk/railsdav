@@ -13,7 +13,7 @@ f you encounter any problems with other Rails versions, please feel free to repo
 
 ## Installation
 
-Just at the following to your Gemfile
+Just add the following to your Gemfile
 
     gem 'railsdav', :git => 'https://github.com/wvk/railsdav.git'
 
