@@ -31,7 +31,8 @@ module Railsdav
 
         options = subresources.extract_options!
         subresources.each do |resource_url|
-          route = Rails.application.routes.recognize_path(resource_url)
+          relative_resource_url = resource_url.sub %r(^#{ActionController::Base.relative_url_root}), '' # HACK
+          route = Rails.application.routes.recognize_path(relative_resource_url)
 
           if meta = Renderer.webdav_metadata_for_url(route)
             # show the resource as a collection unless disabled
