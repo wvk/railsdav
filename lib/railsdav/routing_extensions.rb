@@ -17,35 +17,35 @@ end
 class ActionDispatch::Routing::Mapper
   module HttpHelpers
     def dav_propfind(*args, &block)
-      map_method(:propfind, *args, &block)
+      map_method(:propfind, args, &block)
     end
 
     def dav_options(*args, &block)
-      map_method(:options, *args, &block)
+      map_method(:options, args, &block)
     end
 
     def dav_copy(*args, &block)
-      map_method(:copy, *args, &block)
+      map_method(:copy, args, &block)
     end
 
     def dav_move(*args, &block)
-      map_method(:move, *args, &block)
+      map_method(:move, args, &block)
     end
 
     def dav_mkcol(*args, &block)
-      map_method(:mkcol, *args, &block)
+      map_method(:mkcol, args, &block)
     end
 
     def dav_lock(*args, &block)
-      map_method(:lock, *args, &block)
+      map_method(:lock, args, &block)
     end
 
     def dav_unlock(*args, &block)
-      map_method(:unlock, *args, &block)
+      map_method(:unlock, args, &block)
     end
 
     def dav_proppatch(*args, &block)
-      map_method(:proppatch, *args, &block)
+      map_method(:proppatch, args, &block)
     end
   end
 
@@ -95,7 +95,7 @@ class ActionDispatch::Routing::Mapper
     end
 
     def dav_options_response(*allowed_http_verbs)
-      proc { [200, {'Allow' => allowed_http_verbs.flatten.map{|s| s.to_s.upcase}.join(' '), 'DAV' => '1'}, ['']] }
+      proc { [200, {'Allow' => allowed_http_verbs.flatten.map{|s| s.to_s.upcase}.join(' '), 'DAV' => '1'}, [' ']] }
     end
 
     def dav_match(*args)

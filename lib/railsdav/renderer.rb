@@ -29,7 +29,9 @@ module Railsdav
     def initialize(controller)
       @controller = controller
       @request    = controller.request
-      @depth      = (@request.headers['Depth'].to_i > 0) ? 1 : 0 # depth "infinite" is not yet supported
+      # @depth      = (@request.headers['Depth'].to_i > 0) ? 1 : 0 # depth "infinite" is not yet supported
+      @depth      = (@request.headers['Depth'].to_i)
+      Rails.logger.debug "Depth:\n#{@request.headers['Depth']}"
     end
 
     # Render the requested response_type.
@@ -60,7 +62,7 @@ module Railsdav
     def render
       @dav = Builder::XmlMarkup.new :indent => 2
       @dav.instruct!
-      @dav.multistatus :xmlns => 'DAV:' do
+      @dav.tag!("D:multistatus", "xmlns:D" => 'DAV:') do
         yield @dav
       end
       @dav.target!
@@ -91,7 +93,15 @@ module Railsdav
     def status_for(status)
       code   = Rack::Utils.status_code(status || :ok)
       status = "HTTP/1.1 #{code} #{Rack::Utils::HTTP_STATUS_CODES[code]}"
-      @dav.status status
+      @dav.tag! "D:status", status
+    end
+
+    # Allows you to `render :webdav => :not_found` and get a 404
+    # status properly embedded inside multi-status
+    def not_found(options = {})
+      render do |dav|
+        status_for 404
+      end
     end
 
     # Render a WebDAV multistatus response with a "response" element per resource
@@ -136,41 +146,88 @@ module Railsdav
           updated_at = Time.now
         end
 
+        # note: all of these are assumed to be from the DAV:
+        # namespace!
         response_hash = {
           :quota_used_bytes      => 0,
           :quota_available_bytes => 10.gigabytes,
-          :creationdate          => updated_at.rfc2822,
+          :creationdate          => updated_at.iso8601,
           :getlastmodified       => updated_at.rfc2822,
           :getcontentlength      => hash[:size],
           :getcontenttype        => hash[:format].to_s
         }
 
         if resource.collection?
-          response_hash[:resourcetype]   = proc { @dav.tag! :collection } # must be block to render <collection></collection> instead of "collection"
+          response_hash[:resourcetype]   = proc { @dav.tag! "D:collection" } # must be block to render <collection></collection> instead of "collection"
           response_hash[:getcontenttype] = nil
         end
 
         requested_properties ||= response_hash.keys
 
+        # as a workaround for another bug in Flycode's WebDAV module,
+        # which expects (because of how it does element name matching)
+        # that the properties are always returned with a specified
+        # namespace prefix.  Now, the original Railsdav makes a
+        # slightly careless assumption of its own; it just directly
+        # matches element names in its fixed list, counting on (and
+        # there are none so far) collisions between property names
+        # from various name spaces.  As such, it just assumes that if
+        # the property name is discrimated by a namespace, the client
+        # has only done so by putting a non-prefixed `xmlns` attribute
+        # on the propfind properties (ie., it did not try to use a
+        # prefix itself).  Railsdav really should track and match
+        # properties by both name *and* namespace, in order to be
+        # properly compliant.
+
+        # So, back to the Flycode WebDAV bug: we work around this here
+        # by collecting all of the requested properties, gathering the
+        # namespaces from them, and defining them *all* as prefixes.
+
+        # all of our built-in properties are in the DAV namespace
+        # anyway:
+        gathered_namespaces = {"xmlns:lp0" => "DAV:"}
+        @namespace_counter ||= 1
+        
+        namespaced_requested_properties = {}
+
+        requested_properties.each do |prop_name, opts|
+          if prop_name.to_s.include?(":")
+            # see first paragraph of big comment above
+            Rails.logger.warn("DAV propfind prop request contains a namespace prefix; we do NOT handle these properly yet!")
+          end
+          if (!opts.nil?) && opts["xmlns"]
+            gathered_namespaces["xmlns:lp#{@namespace_counter}"] = opts["xmlns"]
+            opts.delete("xmlns")
+            namespaced_requested_properties["lp#{@namespace_counter}:#{prop_name}"] = opts
+            @namespace_counter +=1
+          else
+            # just copy it through; however, we'll assume it's in the
+            # DAV namespace (which we hardcoded to the `lp0` prefix).
+            namespaced_requested_properties["lp0:#{prop_name}"] = opts
+          end
+        end
+
         response_for(resource.url) do |dav|
-          dav.propstat do
+          dav.tag! "D:propstat", gathered_namespaces do
             status_for hash[:status]
-            dav.prop do
-              requested_properties.each do |prop_name, opts|
+            dav.tag! "D:prop" do
+              namespaced_requested_properties.each do |both_prop_name, opts|
+                prop_space_and_name_pair = both_prop_name.split(":")
+                prop_name = prop_space_and_name_pair[1] || prop_space_and_name_pair[0]
                 if prop_val = response_hash[prop_name.to_sym]
                   if prop_val.respond_to? :call
                     if opts
-                      dav.tag! prop_name, opts, &prop_val
+                      dav.tag! both_prop_name, opts, &prop_val
                     else
-                      dav.tag! prop_name, &prop_val
+                      dav.tag! both_prop_name, &prop_val
                     end
                   else
-                    dav.tag! prop_name, prop_val, opts
+                    dav.tag! both_prop_name, prop_val, opts
                   end
                 elsif opts
-                  dav.tag! prop_name, opts
+                  dav.tag! both_prop_name, opts
                 else
-                  dav.tag! prop_name
+                  dav.tag! both_prop_name
                 end
               end # requested_properties.each
             end # dav.prop
@@ -180,8 +237,8 @@ module Railsdav
     end # def propstat_for
 
     def response_for(href)
-      @dav.response do
-        @dav.href href
+      @dav.tag! "D:response" do
+        @dav.tag! "D:href", href
         yield @dav
       end
     end
