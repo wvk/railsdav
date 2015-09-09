@@ -16,36 +16,18 @@ end
 # ATTENTION: adapt this to newer rails version if upgrading the framework!
 class ActionDispatch::Routing::Mapper
   module HttpHelpers
-    def dav_propfind(*args, &block)
-      map_method(:propfind, args, &block)
-    end
 
-    def dav_options(*args, &block)
-      map_method(:options, args, &block)
-    end
-
-    def dav_copy(*args, &block)
-      map_method(:copy, args, &block)
-    end
-
-    def dav_move(*args, &block)
-      map_method(:move, args, &block)
-    end
-
-    def dav_mkcol(*args, &block)
-      map_method(:mkcol, args, &block)
-    end
-
-    def dav_lock(*args, &block)
-      map_method(:lock, args, &block)
-    end
-
-    def dav_unlock(*args, &block)
-      map_method(:unlock, args, &block)
-    end
-
-    def dav_proppatch(*args, &block)
-      map_method(:proppatch, args, &block)
+    %w(propfind options copy move mkcol lock unlock proppatch).each do |method_name|
+      define_method "dav_#{method_name}" do |*args, &block|
+        case Rails.version
+        when /^3\./
+          map_method(method_name, *args, &block)
+        when /^4\./
+          map_method(method_name, args, &block)
+        else
+          raise "Your Rails Version (#{Rails.version}) is currently not supported by the RailsDAV gem."
+        end
+      end
     end
   end
 
