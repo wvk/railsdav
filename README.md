@@ -21,7 +21,7 @@ free to report an issue or send me a pull request on github.
 
 Ensure that your project has the
 [Rails ActionPack XML Params Parser gem](https://github.com/rails/actionpack-xml_parser)
-installed, and then ust add the following to your Gemfile:
+installed, and then just add the following to your Gemfile:
 
     gem 'railsdav', :git => 'https://github.com/wvk/railsdav.git'
 
@@ -182,6 +182,7 @@ is_webdav_request? checks whether an Incoming request is issued by a WebDAV clie
 
 ## Changelog
 
+* 0.0.8: Merge Contributions from naserca, orospakr, and rutgerg
 * 0.0.7: Fix metadata class attribute inheritance problem
 * 0.0.6: Fix update_all for Rails 3.2
 * 0.0.5: Rails 3.2.x compatibility, add encoding hints, fix ResourceDescriptor load error
