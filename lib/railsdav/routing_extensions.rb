@@ -52,11 +52,7 @@ class ActionDispatch::Routing::Mapper
       end
     end
 
-    if Rails.version >= '4.2'
-      def resource_scope? #:nodoc:
-        @scope.resource_scope?
-      end
-    elsif Rails.version < '3.2'
+    if Rails.version < '3.2'
       # Rails versions after 3.1 expect two arguments here, the first being :resource, :resources,
       # :webdav_resource etc.so we don't need the inferring logic anymore in newer versions.
       def resource_scope(resource)
@@ -78,7 +74,7 @@ class ActionDispatch::Routing::Mapper
       end
     else
       def resource_scope?
-        [:webdav_resource, :webdav_resources, :resource, :resources].include?(@scope[:scope_level])
+        [:webdav_resource, :webdav_resources, :resource, :resources].include?(@scope[:scope_level] || @scope.scope_level)
       end
     end
 
