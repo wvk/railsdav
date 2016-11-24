@@ -2,6 +2,12 @@
 
 require 'builder'
 
+if Rails.version > '4.0'
+  require 'active_support'
+  require 'active_support/core_ext/hash/conversions'
+end
+
+
 module Railsdav
   class Renderer
     autoload :ResourceDescriptor,   'railsdav/renderer/resource_descriptor'
@@ -29,9 +35,9 @@ module Railsdav
     def initialize(controller)
       @controller = controller
       @request    = controller.request
-      # @depth      = (@request.headers['Depth'].to_i > 0) ? 1 : 0 # depth "infinite" is not yet supported
+#       @depth      = (@request.headers['Depth'].to_i > 0) ? 1 : 0 # depth "infinite" is not yet supported
       @depth      = (@request.headers['Depth'].to_i)
-      Rails.logger.debug "Depth:\n#{@request.headers['Depth']}"
+      Rails.logger.debug "Depth:#{@request.headers['Depth']}"
     end
 
     # Render the requested response_type.
@@ -118,15 +124,22 @@ module Railsdav
 
       render do |dav|
         propstat_for response_collector.resource
-        propstat_for response_collector.subresources if @depth > 0
+        propstat_for response_collector.subresources if @depth >= 0
       end
     end
 
     private
 
     def propstat_for(*resources)
-      params = @controller.params
-      params[:propfind] ||= {:prop => []}
+      params = @controller.params.dup
+      if params[:propfind]
+        # OK
+      elsif @controller.request.body.size > 0 # rails version without automatic XML body params parsing, so do it by hand here:
+        @controller.request.body.rewind
+        params.merge! Hash.from_xml(@controller.request.body.read)
+      else
+        params[:propfind] ||= {:prop => []}
+      end
 
       if params[:propfind].has_key? 'allprop'
         requested_properties = nil # fill it later, see below.
@@ -185,25 +198,27 @@ module Railsdav
 
         # all of our built-in properties are in the DAV namespace
         # anyway:
-        gathered_namespaces = {"xmlns:lp0" => "DAV:"}
+        gathered_namespaces = {}
         @namespace_counter ||= 1
-        
+
         namespaced_requested_properties = {}
 
+        Rails.logger.debug requested_properties.inspect
         requested_properties.each do |prop_name, opts|
           if prop_name.to_s.include?(":")
             # see first paragraph of big comment above
             Rails.logger.warn("DAV propfind prop request contains a namespace prefix; we do NOT handle these properly yet!")
           end
-          if (!opts.nil?) && opts["xmlns"]
+
+          if (!opts.nil?) and opts["xmlns"]
             gathered_namespaces["xmlns:lp#{@namespace_counter}"] = opts["xmlns"]
             opts.delete("xmlns")
             namespaced_requested_properties["lp#{@namespace_counter}:#{prop_name}"] = opts
             @namespace_counter +=1
           else
             # just copy it through; however, we'll assume it's in the
-            # DAV namespace (which we hardcoded to the `lp0` prefix).
-            namespaced_requested_properties["lp0:#{prop_name}"] = opts
+            # DAV namespace (which we hardcoded to the `D` prefix).
+            namespaced_requested_properties["D:#{prop_name}"] = opts
           end
         end
 

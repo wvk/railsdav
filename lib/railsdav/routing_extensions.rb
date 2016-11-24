@@ -4,10 +4,12 @@
 # userinfo is not a standard webdav verb, bur davfs2 uses it
 # and we want to be prepared to ignore it gracefully (e.g.
 # by sending a :not_implemented response)
-verbs = %w(propfind proppatch mkcol copy move lock unlock userinfo)
-verbs.each do |method|
-  ActionDispatch::Request::HTTP_METHODS << method.upcase
-  ActionDispatch::Request::HTTP_METHOD_LOOKUP[method.upcase] = method.to_sym
+if Rails.version < '3.2'
+  verbs = %w(propfind proppatch mkcol copy move lock unlock userinfo)
+  verbs.each do |method|
+    ActionDispatch::Request::HTTP_METHODS << method.upcase
+    ActionDispatch::Request::HTTP_METHOD_LOOKUP[method.upcase] = method.to_sym
+  end
 end
 
 # Extend routing s.t. webdav_resource and webdav_resources can be used,
@@ -50,11 +52,11 @@ class ActionDispatch::Routing::Mapper
       end
     end
 
-    def resource_scope?
-      [:webdav_resource, :webdav_resources, :resource, :resources].include?(@scope[:scope_level])
-    end
-
-    if Rails.version < '3.2'
+    if Rails.version >= '4.2'
+      def resource_scope? #:nodoc:
+        @scope.resource_scope?
+      end
+    elsif Rails.version < '3.2'
       # Rails versions after 3.1 expect two arguments here, the first being :resource, :resources,
       # :webdav_resource etc.so we don't need the inferring logic anymore in newer versions.
       def resource_scope(resource)
@@ -74,14 +76,24 @@ class ActionDispatch::Routing::Mapper
           end
         end
       end
+    else
+      def resource_scope?
+        [:webdav_resource, :webdav_resources, :resource, :resources].include?(@scope[:scope_level])
+      end
     end
 
     def dav_options_response(*allowed_http_verbs)
+      Rails.logger.info "responding to OPTIONS with Allow: #{allowed_http_verbs.flatten.map{|s| s.to_s.upcase}.join(' ')}"
       proc { [200, {'Allow' => allowed_http_verbs.flatten.map{|s| s.to_s.upcase}.join(' '), 'DAV' => '1'}, [' ']] }
     end
 
     def dav_match(*args)
       get *args
+      if args.last.is_a? Hash
+        # prevents `Invalid route name, already in use`
+        args.last.delete(:as)
+        args.last.delete('as')
+      end
       dav_propfind *args
     end
 
