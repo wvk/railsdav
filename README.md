@@ -9,10 +9,10 @@ app with client(-libs) such as Konqueror, cadaver, davfs2 or NetDrive.
 
 ## Compatibility
 
-Definitely works with Rails 3.0.9, 3.2.13 and 4.2.4, but should also work
-with versions in between.  This is due to some hacking done "under the
-hood" in the Rails routing implementation as well as a simple method
-override in ActionController.
+Definitely works with Rails 3.0.9, 3.2.13, 4.2.4, and 4.2.7.1, but should
+also work with versions in between.  This is due to some hacking done
+"under the hood" in the Rails routing implementation as well as a simple
+method override in ActionController.
 
 If you encounter any problems with other Rails versions, please feel
 free to report an issue or send me a pull request on github.
@@ -182,6 +182,7 @@ is_webdav_request? checks whether an Incoming request is issued by a WebDAV clie
 
 ## Changelog
 
+* 0.1.1: NoMethodError fix if using `format.any` responder
 * 0.1.0: Rails 4.2 compatibility
 * 0.0.9: Add missing file to gemspec
 * 0.0.8: Merge Contributions from naserca, orospakr, and rutgerg
