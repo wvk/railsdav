@@ -23,7 +23,7 @@ module Railsdav
 
       # responds to calls like html, xml, json by ignoring them
       def method_missing(name, *args)
-        super unless Mime::EXTENSION_LOOKUP[name.to_s]
+        super unless Mime::EXTENSION_LOOKUP[name.to_s] or name == :any
       end
 
       def webdav
