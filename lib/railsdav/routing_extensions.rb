@@ -24,7 +24,7 @@ class ActionDispatch::Routing::Mapper
         case Rails.version
         when /^3\./
           map_method(method_name, *args, &block)
-        when /^4\./
+        when /^(4|5)\./
           map_method(method_name, args, &block)
         else
           raise "Your Rails Version (#{Rails.version}) is currently not supported by the RailsDAV gem."
@@ -199,8 +199,12 @@ class ActionDispatch::Routing::Mapper
 
       if Rails.version < '3.2'
         resource_scope(WebDAVResource.new(resources.pop, options), &sub_block)
-      else
+      elsif Rails.version < '5.0'
         resource_scope(:webdav_resources, WebDAVResource.new(resources.pop, options), &sub_block)
+      else
+        with_scope_level :webdav_resources do
+          resource_scope WebDAVResource.new(resources.pop, api_only?, options), &sub_block
+        end
       end
 
       self

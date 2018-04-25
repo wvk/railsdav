@@ -4,11 +4,37 @@ module Railsdav
   module ControllerExtensions
     extend ActiveSupport::Concern
 
+    # ruby 2+ compatibility
+    module RespondWithWebdav
+      # decorate behaviour defined in ActionController::MimeResponds
+      def respond_to(*mimes, &block)
+        if request.propfind?
+          render :webdav => :propstat, :respond_to_block => block
+        else
+          super *mimes, &block
+        end
+      end
+
+      # decorate behaviour defined in ActionController::MimeResponds
+      def respond_with(*resources, &block)
+        if request.propfind?
+          render :webdav => :propstat, :respond_to_block => block
+        else
+          super *resources, &block
+        end
+      end
+
+    end
+
     included do
       class_attribute :webdav_metadata
 
-      alias_method_chain :respond_to, :webdav
-      alias_method_chain :respond_with, :webdav
+      if respond_to? :prepend # ruby >= 2.0
+        prepend RespondWithWebdav
+      elsif respond_to? :alias_method_chain # ruby < 2.0
+        alias_method_chain :respond_to, :webdav
+        alias_method_chain :respond_with, :webdav
+      end
     end
 
     module ClassMethods
