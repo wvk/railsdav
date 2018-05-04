@@ -126,8 +126,12 @@ class ActionDispatch::Routing::Mapper
 
       if Rails.version < '3.2'
         resource_scope(WebDAVSingletonResource.new(resources.pop, options), &sub_block)
-      else
+      elsif Rails.version < '5.0'
         resource_scope(:webdav_resource, WebDAVSingletonResource.new(resources.pop, options), &sub_block)
+      else
+        with_scope_level :webdav_resource do
+          resource_scope WebDAVResource.new(resources.pop, api_only?, options), &sub_block
+        end
       end
 
       self
