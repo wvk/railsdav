@@ -14,7 +14,7 @@ module Railsdav
       end
 
       def format(name, options)
-        if Mime::EXTENSION_LOOKUP[name.to_s]
+        if Mime::Type.lookup_by_extension(name.to_s)
           if @request_format.to_sym == name
             # TODO: somehow get the attributes (size, updated-at, ...) from the actual Mime responder block here
             @resource_options.merge! options

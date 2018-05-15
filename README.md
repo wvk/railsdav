@@ -182,6 +182,7 @@ is_webdav_request? checks whether an Incoming request is issued by a WebDAV clie
 
 ## Changelog
 
+* 0.1.3: more Rails 5.0 compatibility
 * 0.1.2: Rails 5.0 compatibility
 * 0.1.1: NoMethodError fix if using `format.any` responder
 * 0.1.0: Rails 4.2 compatibility

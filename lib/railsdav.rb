@@ -22,7 +22,7 @@ module Railsdav
     response.headers['DAV']   = '1'
 
     send_data xml_str,
-        :content_type => Mime::XML,
+        :content_type => Mime[:xml],
         :status => :multi_status
   end
 
