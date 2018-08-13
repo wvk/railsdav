@@ -1,11 +1,11 @@
 # encoding: utf-8
 
-module Railsdav
-  autoload :ControllerExtensions, 'railsdav/controller_extensions'
-  autoload :RoutingExtensions,    'railsdav/routing_extensions'
-  autoload :RequestExtensions,    'railsdav/request_extensions'
-  autoload :Renderer,             'railsdav/renderer'
+require 'railsdav/routing_extensions'
+require 'railsdav/controller_extensions'
+require 'railsdav/request_extensions'
+require 'railsdav/renderer'
 
+module Railsdav
   class MissingWebDAVMetadata < StandardError; end
 
   WEBDAV_HTTP_VERBS = ActionDispatch::Request::RFC2518
