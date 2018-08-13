@@ -232,12 +232,12 @@ module Railsdav
                 if prop_val = response_hash[prop_name.to_sym]
                   if prop_val.respond_to? :call
                     if opts
-                      dav.tag! both_prop_name, opts, &prop_val
+                      dav.tag! both_prop_name, opts.to_h, &prop_val
                     else
                       dav.tag! both_prop_name, &prop_val
                     end
                   else
-                    dav.tag! both_prop_name, prop_val, opts
+                    dav.tag! both_prop_name, prop_val, opts.to_h
                   end
                 elsif opts
                   dav.tag! both_prop_name, opts
