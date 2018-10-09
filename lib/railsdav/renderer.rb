@@ -137,14 +137,20 @@ module Railsdav
       elsif @controller.request.body.size > 0 # rails version without automatic XML body params parsing, so do it by hand here:
         @controller.request.body.rewind
         params.merge! Hash.from_xml(@controller.request.body.read)
-      else
-        params[:propfind] ||= {:prop => []}
       end
 
-      if params[:propfind].has_key? 'allprop'
+      params[:propfind] ||= {:prop => []}
+
+      if params[:propfind].respond_to? :to_unsafe_h
+        propfind_params = params[:propfind].to_unsafe_h
+      else
+        propfind_params = params[:propfind]
+      end
+
+      if propfind_params.has_key? 'allprop'
         requested_properties = nil # fill it later, see below.
       else
-        requested_properties = params[:propfind][:prop]
+        requested_properties = propfind_params[:prop]
       end
 
       resources.flatten.each do |resource|
@@ -205,14 +211,14 @@ module Railsdav
 
         Rails.logger.debug requested_properties.inspect
         requested_properties.each do |prop_name, opts|
-          if prop_name.to_s.include?(":")
-            # see first paragraph of big comment above
-            Rails.logger.warn("DAV propfind prop request contains a namespace prefix; we do NOT handle these properly yet!")
+          if prop_name.to_s.include?(':')
+            # see first paragraph of long comment above
+            Rails.logger.warn 'DAV propfind prop request contains a namespace prefix; we do NOT handle these properly yet!'
           end
 
-          if (!opts.nil?) and opts["xmlns"]
-            gathered_namespaces["xmlns:lp#{@namespace_counter}"] = opts["xmlns"]
-            opts.delete("xmlns")
+          if opts and opts['xmlns']
+            gathered_namespaces["xmlns:lp#{@namespace_counter}"] = opts['xmlns']
+            opts.delete 'xmlns'
             namespaced_requested_properties["lp#{@namespace_counter}:#{prop_name}"] = opts
             @namespace_counter +=1
           else
@@ -223,11 +229,11 @@ module Railsdav
         end
 
         response_for(resource.url) do |dav|
-          dav.tag! "D:propstat", gathered_namespaces do
+          dav.tag! 'D:propstat', gathered_namespaces do
             status_for hash[:status]
-            dav.tag! "D:prop" do
+            dav.tag! 'D:prop' do
               namespaced_requested_properties.each do |both_prop_name, opts|
-                prop_space_and_name_pair = both_prop_name.split(":")
+                prop_space_and_name_pair = both_prop_name.split(':')
                 prop_name = prop_space_and_name_pair[1] || prop_space_and_name_pair[0]
                 if prop_val = response_hash[prop_name.to_sym]
                   if prop_val.respond_to? :call
@@ -252,8 +258,8 @@ module Railsdav
     end # def propstat_for
 
     def response_for(href)
-      @dav.tag! "D:response" do
-        @dav.tag! "D:href", href
+      @dav.tag! 'D:response' do
+        @dav.tag! 'D:href', href
         yield @dav
       end
     end
